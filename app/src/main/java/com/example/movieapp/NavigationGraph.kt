@@ -41,6 +41,7 @@ object NavRoutes {
     const val SETTINGS = "settings"
     const val TOPTEN = "top_ten"
     const val NEWRELEASES = "new_releases"
+//    const val EXPLORE ="explore"
     const val MOVIE_DETAILS = "movie_details/{movieId}"
 
     fun movieDetails(movieId: Int) = "movie_details/$movieId"
@@ -52,7 +53,7 @@ sealed class BottomNavItem(
     @DrawableRes val icon: Int
 ) {
     object Home : BottomNavItem(NavRoutes.HOME, "Home", R.drawable.home)
-    object Explore : BottomNavItem(NavRoutes.EXPLORE, "Explore", R.drawable.group)
+    object Explore : BottomNavItem(NavRoutes.EXPLORE, "Explore", R.drawable.explore)
     object Settings : BottomNavItem(NavRoutes.SETTINGS, "Settings", R.drawable.profile)
 }
 
@@ -154,6 +155,10 @@ fun SetupNavGraph(navController: NavHostController) {
                     }
                 )
             }
+            composable(route= NavRoutes.EXPLORE){
+                ExploreScreen(onMovieClick = {movieId ->
+                    navController.navigate(NavRoutes.movieDetails(movieId))})
+            }
         }
     }
 }
@@ -195,7 +200,7 @@ fun AppBottomNavigationBar(navController: NavHostController) {
                 onClick = {
                     if (currentRoute != item.route) {
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
+                            popUpTo(NavRoutes.HOME) {
                                 saveState = true
                             }
                             launchSingleTop = true

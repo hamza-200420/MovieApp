@@ -22,14 +22,14 @@ interface MovieRepository {
     suspend fun getTvGenres(): List<Genre>
     fun getFilteredMoviesPaged(
         region: String? = null,
-        genreId: Int? = null,
+        genreIds: String? = null,
         timePeriod: Int? = null,
         sortBy: String? = null
     ): Flow<PagingData<Movie>>
 
     fun getFilteredTvPaged(
         region: String? = null,
-        genreId: Int? = null,
+        genreIds: String? = null,
         timePeriod: Int? = null,
         sortBy: String? = null
     ): Flow<PagingData<Movie>>

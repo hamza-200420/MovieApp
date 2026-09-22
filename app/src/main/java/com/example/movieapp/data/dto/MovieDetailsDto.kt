@@ -12,10 +12,10 @@ data class MovieDetailsDto(
     @SerializedName("vote_average") val voteAverage: Double,
     @SerializedName("runtime") val runtime: Int?,
     @SerializedName("release_date") val releaseDate: String?,
-    @SerializedName("genres") val genres: List<GenreDto>,
-    @SerializedName("credits") val credits: CreditsDto,
-    @SerializedName("videos") val videos: VideoListDto,
-    @SerializedName("reviews") val reviews: ReviewPageDto,
-    @SerializedName("similar") val similar: MoviePageDto,
-    @SerializedName("release_dates") val releaseDates: ReleaseDatesResultDto
+    @SerializedName("genres") val genres: List<com.example.movieapp.data.dto.GenreDto>,
+    @SerializedName("credits") val credits: com.example.movieapp.data.dto.CreditsDto,
+    @SerializedName("videos") val videos: com.example.movieapp.data.dto.VideoListDto,
+    @SerializedName("reviews") val reviews: com.example.movieapp.data.dto.ReviewPageDto,
+    @SerializedName("similar") val similar: com.example.movieapp.data.dto.MoviePageDto,
+    @SerializedName("release_dates") val releaseDates: com.example.movieapp.data.dto.ReleaseDatesResultDto
 )

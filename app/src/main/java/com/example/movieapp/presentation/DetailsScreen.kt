@@ -62,7 +62,11 @@ import coil.compose.AsyncImage
 import java.util.Locale
 
 @Composable
-fun DetailsScreen(viewModel: DetailsScreenViewModel = hiltViewModel(), onNavigateBack: () -> Unit, onMovieClick: (Int) -> Unit) {
+fun DetailsScreen(
+    viewModel: DetailsScreenViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit,
+    onMovieClick: (Int) -> Unit
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var expanded by remember { mutableStateOf(false) }
     val tabs = listOf("Trailers", "More Like This", "Comments")
@@ -301,7 +305,7 @@ fun DetailsScreen(viewModel: DetailsScreenViewModel = hiltViewModel(), onNavigat
                                 MoreLikeThisItem(
                                     rating = movie.voteAverage,
                                     posterPath = movie.posterPath ?: "",
-                                    onClick = { onMovieClick(movie.id)}
+                                    onClick = { onMovieClick(movie.id) }
                                 )
                             }
                         }

@@ -49,7 +49,7 @@ class MovieRemoteDataSource @Inject constructor(
 
     suspend fun getFilteredMovies(
         region: String? = null,
-        genreId: Int? = null,
+        genreIds: String? = null,
         timePeriod: Int? = null,
         sortBy: String? = null,
         page: Int = 1
@@ -57,7 +57,7 @@ class MovieRemoteDataSource @Inject constructor(
         return api.discoverMovies(
             page = page,
             sortBy = sortBy,
-            withGenres = genreId?.toString(),
+            withGenres = genreIds,
             withOriginCountry = region,
             primaryReleaseYear = timePeriod
         )
@@ -65,7 +65,7 @@ class MovieRemoteDataSource @Inject constructor(
 
     suspend fun getFilteredTv(
         region: String? = null,
-        genreId: Int? = null,
+        genreIds: String? = null,
         timePeriod: Int? = null,
         sortBy: String? = null,
         page: Int = 1
@@ -73,7 +73,7 @@ class MovieRemoteDataSource @Inject constructor(
         return api.discoverTv(
             page = page,
             sortBy = sortBy,
-            withGenres = genreId?.toString(),
+            withGenres = genreIds,
             withOriginCountry = region,
             firstAirDateYear = timePeriod
         )

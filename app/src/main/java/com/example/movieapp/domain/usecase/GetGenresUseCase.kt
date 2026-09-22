@@ -9,5 +9,6 @@ class GetGenresUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): List<Genre> {
        return repository.getGenres()
+
     }
 }

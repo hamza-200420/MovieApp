@@ -11,13 +11,13 @@ class GetFilteredMoviesPagedUseCase @Inject constructor(
 ) {
     operator fun invoke(
         region: String? = null,
-        genreId: Int? = null,
+        genreIds: String? = null,
         timePeriod: Int? = null,
         sortBy: String? = null
     ): Flow<PagingData<Movie>> {
         return repository.getFilteredMoviesPaged(
             region = region,
-            genreId = genreId,
+            genreIds = genreIds,
             timePeriod = timePeriod,
             sortBy = sortBy
         )

@@ -86,7 +86,7 @@ class MovieRepositoryImpl @Inject constructor(
 
     override fun getFilteredMoviesPaged(
         region: String?,
-        genreId: Int?,
+        genreIds: String?,
         timePeriod: Int?,
         sortBy: String?
     ): Flow<PagingData<Movie>> {
@@ -96,7 +96,7 @@ class MovieRepositoryImpl @Inject constructor(
                 GenericMoviePagingSource { page ->
                     remoteDataSource.getFilteredMovies(
                         region = region,
-                        genreId = genreId,
+                        genreIds = genreIds,
                         timePeriod = timePeriod,
                         sortBy = sortBy,
                         page = page
@@ -108,7 +108,7 @@ class MovieRepositoryImpl @Inject constructor(
 
     override fun getFilteredTvPaged(
         region: String?,
-        genreId: Int?,
+        genreIds: String?,
         timePeriod: Int?,
         sortBy: String?
     ): Flow<PagingData<Movie>> {
@@ -118,7 +118,7 @@ class MovieRepositoryImpl @Inject constructor(
                 GenericMoviePagingSource { page ->
                     remoteDataSource.getFilteredTv(
                         region = region,
-                        genreId = genreId,
+                        genreIds = genreIds,
                         timePeriod = timePeriod,
                         sortBy = sortBy,
                         page = page
