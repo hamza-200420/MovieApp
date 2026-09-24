@@ -26,22 +26,24 @@ import com.example.movieapp.presentation.DetailsScreen
 import com.example.movieapp.presentation.ExploreScreen
 import com.example.movieapp.presentation.HomeScreen
 import com.example.movieapp.presentation.OnBoardingScreen
-import com.example.movieapp.presentation.SettingsScreen
+//import com.example.movieapp.presentation.FavouriteScreen
 import com.example.movieapp.presentation.SplashScreen
 import com.example.movieapp.presentation.TopTenScreen
 import com.example.movieapp.presentation.UpcomingScreen
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.movieapp.presentation.FavouriteScreen
 
 object NavRoutes {
     const val SPLASH = "splash"
     const val ONBOARDING = "on_boarding"
     const val HOME = "home"
     const val EXPLORE = "explore"
-    const val SETTINGS = "settings"
+    const val FAVOURITES = "favourites"
     const val TOPTEN = "top_ten"
     const val NEWRELEASES = "new_releases"
-//    const val EXPLORE ="explore"
+
+    //    const val EXPLORE ="explore"
     const val MOVIE_DETAILS = "movie_details/{movieId}"
 
     fun movieDetails(movieId: Int) = "movie_details/$movieId"
@@ -54,7 +56,7 @@ sealed class BottomNavItem(
 ) {
     object Home : BottomNavItem(NavRoutes.HOME, "Home", R.drawable.home)
     object Explore : BottomNavItem(NavRoutes.EXPLORE, "Explore", R.drawable.explore)
-    object Settings : BottomNavItem(NavRoutes.SETTINGS, "Settings", R.drawable.profile)
+    object Favourite : BottomNavItem(NavRoutes.FAVOURITES, "Favourite", R.drawable.profile)
 }
 
 @Composable
@@ -65,7 +67,7 @@ fun SetupNavGraph(navController: NavHostController) {
     val bottomBarRoutes = listOf(
         NavRoutes.HOME,
         NavRoutes.EXPLORE,
-        NavRoutes.SETTINGS
+        NavRoutes.FAVOURITES
     )
 
     val showBottomBar = currentRoute in bottomBarRoutes
@@ -122,8 +124,9 @@ fun SetupNavGraph(navController: NavHostController) {
                 ExploreScreen()
             }
 
-            composable(NavRoutes.SETTINGS) {
-                SettingsScreen()
+            composable(NavRoutes.FAVOURITES) {
+                FavouriteScreen(onItemCLick = {movieId ->
+                    navController.navigate(NavRoutes.movieDetails(movieId))})
             }
 
             composable(NavRoutes.TOPTEN) {
@@ -155,9 +158,10 @@ fun SetupNavGraph(navController: NavHostController) {
                     }
                 )
             }
-            composable(route= NavRoutes.EXPLORE){
-                ExploreScreen(onMovieClick = {movieId ->
-                    navController.navigate(NavRoutes.movieDetails(movieId))})
+            composable(route = NavRoutes.EXPLORE) {
+                ExploreScreen(onMovieClick = { movieId ->
+                    navController.navigate(NavRoutes.movieDetails(movieId))
+                })
             }
         }
     }
@@ -168,7 +172,7 @@ fun AppBottomNavigationBar(navController: NavHostController) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Explore,
-        BottomNavItem.Settings
+        BottomNavItem.Favourite
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

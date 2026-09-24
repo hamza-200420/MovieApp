@@ -3,6 +3,7 @@ package com.example.movieapp.domain.repository
 import androidx.paging.PagingData
 import com.example.movieapp.domain.model.Genre
 import com.example.movieapp.domain.model.Movie
+import com.example.movieapp.domain.model.MovieDbModel
 import com.example.movieapp.domain.model.MovieDetails
 import com.example.movieapp.domain.model.MoviePage
 import com.example.movieapp.domain.model.Region
@@ -33,4 +34,9 @@ interface MovieRepository {
         timePeriod: Int? = null,
         sortBy: String? = null
     ): Flow<PagingData<Movie>>
+
+    suspend fun insertMovie(movie: MovieDbModel)
+    suspend fun deleteMovie(movieId: Int)
+    suspend fun isMovieSaved(movieId: Int): Boolean
+    fun getAllMovies(): Flow<List<MovieDbModel>>
 }

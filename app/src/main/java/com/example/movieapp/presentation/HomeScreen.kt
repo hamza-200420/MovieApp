@@ -22,10 +22,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -155,7 +158,9 @@ fun HomeScreen(
                 MovieItem(
                     rating = movie.voteAverage,
                     posterPath = movie.posterPath ?: "",
-                    onClick = { onMovieClick(movie.id) }
+                    isFavorite = movie.id in uiState.favoriteIds,
+                    onClick = { onMovieClick(movie.id) },
+                    onFavoriteClick = { viewModel.toggleFavorite(movie) }
                 )
             }
         }
@@ -182,7 +187,9 @@ fun HomeScreen(
                 MovieItem(
                     rating = movie.voteAverage,
                     posterPath = movie.posterPath ?: "",
-                    onClick = { onMovieClick(movie.id) }
+                    isFavorite = movie.id in uiState.favoriteIds,
+                    onClick = { onMovieClick(movie.id) },
+                    onFavoriteClick = { viewModel.toggleFavorite(movie) }
                 )
             }
         }
@@ -192,7 +199,13 @@ fun HomeScreen(
 
 
 @Composable
-fun MovieItem(rating: Double, posterPath: String, onClick: () -> Unit) {
+fun MovieItem(
+    rating: Double,
+    posterPath: String,
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+    onFavoriteClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .width(140.dp)
@@ -223,6 +236,20 @@ fun MovieItem(rating: Double, posterPath: String, onClick: () -> Unit) {
             Text(
                 text = String.format(Locale.US, "%.1f", rating),
                 color = Color.White
+            )
+        }
+
+        IconButton(
+            onClick = onFavoriteClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                tint = if (isFavorite) Color(0xFFE50914) else Color.White
             )
         }
     }

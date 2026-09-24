@@ -29,13 +29,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SecondaryTabRow
@@ -70,6 +75,15 @@ fun DetailsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var expanded by remember { mutableStateOf(false) }
     val tabs = listOf("Trailers", "More Like This", "Comments")
+    if (uiState.isLoading){
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
+    else
     Column(modifier = Modifier.verticalScroll(rememberScrollState()))
     {
         Box(modifier = Modifier.height(height = 300.dp)) {
@@ -121,11 +135,17 @@ fun DetailsScreen(
                 modifier = Modifier.weight(1f)
             )
 
-            Icon(
-                imageVector = Icons.Outlined.Bookmark,
-                contentDescription = "Bookmark",
-                tint = Color(0xFF212121)
-            )
+            IconButton(
+                onClick = {
+                    viewModel.toggleIcon()
+                }
+            ) {
+                Icon(
+                    imageVector = if (uiState.isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (uiState.isSaved) "Remove from favorites" else "Add to favorites",
+                    tint = if (uiState.isSaved) Color(0xFFE50914) else Color.Black
+                )
+            }
 
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.Send,

@@ -6,5 +6,6 @@ data class DetailsScreenUiState(
     val isLoading: Boolean = true,
     val movieDetails: MovieDetails? = null,
 //    val errorMessage: String? = null,
-    val selectedTabIndex: Int = 0
+    val selectedTabIndex: Int = 0,
+    val isSaved: Boolean=false
 )

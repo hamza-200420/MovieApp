@@ -26,8 +26,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -197,7 +200,9 @@ fun ExploreScreen(
                                 ExploreMovieItem(
                                     rating = movie.voteAverage,
                                     posterPath = movie.posterPath ?: "",
-                                    onClick = { onMovieClick(movie.id) }
+                                    isFavorite = movie.id in uiState.favoriteIds,
+                                    onClick = { onMovieClick(movie.id) },
+                                    onFavoriteClick = { viewModel.toggleFavorite(movie) }
                                 )
                             }
                         }
@@ -493,7 +498,13 @@ private fun FilterSectionTitle(title: String) {
 }
 
 @Composable
-private fun ExploreMovieItem(rating: Double, posterPath: String, onClick: () -> Unit) {
+private fun ExploreMovieItem(
+    rating: Double,
+    posterPath: String,
+    onClick: () -> Unit,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -519,29 +530,21 @@ private fun ExploreMovieItem(rating: Double, posterPath: String, onClick: () -> 
                 fontSize = 12.sp
             )
         }
+        IconButton(
+            onClick = onFavoriteClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                tint = if (isFavorite) Color(0xFFE50914) else Color.White
+            )
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @Composable

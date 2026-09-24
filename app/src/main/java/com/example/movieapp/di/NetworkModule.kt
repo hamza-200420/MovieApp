@@ -1,6 +1,6 @@
 package com.example.movieapp.di
 
-import com.example.movieapp.data.api.MovieApi
+import com.example.movieapp.data.remote.api.MovieApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module

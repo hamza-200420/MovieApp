@@ -7,15 +7,20 @@ import androidx.paging.cachedIn
 import com.example.movieapp.domain.model.Category
 import com.example.movieapp.domain.model.Genre
 import com.example.movieapp.domain.model.Movie
+import com.example.movieapp.domain.model.MovieDbModel
 import com.example.movieapp.domain.model.MovieFilter
 import com.example.movieapp.domain.model.Region
 import com.example.movieapp.domain.model.SortOption
+import com.example.movieapp.domain.usecase.DeleteMovieUseCase
+import com.example.movieapp.domain.usecase.GetAllMoviesUseCase
 import com.example.movieapp.domain.usecase.GetFilteredMoviesPagedUseCase
 import com.example.movieapp.domain.usecase.GetFilteredTvPagedUseCase
 import com.example.movieapp.domain.usecase.GetMovieGenresUseCase
 import com.example.movieapp.domain.usecase.GetRegionsUseCase
 import com.example.movieapp.domain.usecase.GetTvGenresUseCase
+import com.example.movieapp.domain.usecase.InsertMovieUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,11 +38,44 @@ class ExploreScreenViewModel @Inject constructor(
     private val getFilteredTvPagedUseCase: GetFilteredTvPagedUseCase,
     private val getRegionsUseCase: GetRegionsUseCase,
     private val getMovieGenresUseCase: GetMovieGenresUseCase,
-    private val getTvGenresUseCase: GetTvGenresUseCase
+    private val getTvGenresUseCase: GetTvGenresUseCase,
+    private val getAllMoviesUseCase: GetAllMoviesUseCase,
+    private val insertMovieUseCase: InsertMovieUseCase,
+    private val deleteMovieUseCase: DeleteMovieUseCase
 ) : ViewModel() {
+
+    init {
+        getFavorites()
+    }
 
     private val _uiState = MutableStateFlow(ExploreScreenUiState())
     val uiState: StateFlow<ExploreScreenUiState> = _uiState.asStateFlow()
+    private fun getFavorites() {
+        viewModelScope.launch {
+            getAllMoviesUseCase().collect { movies ->
+                val ids = movies.map { it.movieId }.toSet()
+                _uiState.update { it.copy(favoriteIds = ids) }
+            }
+        }
+    }
+
+    fun toggleFavorite(movie: Movie) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (movie.id in _uiState.value.favoriteIds) {
+                deleteMovieUseCase(movie.id)
+            } else {
+                insertMovieUseCase(
+                    MovieDbModel(
+                        id = 0,
+                        movieId = movie.id,
+                        title = movie.title,
+                        posterPath = movie.posterPath,
+                        voteAverage = movie.voteAverage
+                    )
+                )
+            }
+        }
+    }
 
     private val moviesFlow: Flow<PagingData<Movie>> = _uiState
         .map { it.appliedFilter }

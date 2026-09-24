@@ -15,5 +15,6 @@ data class ExploreScreenUiState(
     val draftFilter: MovieFilter = MovieFilter(),
     val appliedFilter: MovieFilter = MovieFilter(),
     val activeFilterLabels: List<String> = emptyList(),
-    val isFilterSheetVisible: Boolean = false
+    val isFilterSheetVisible: Boolean = false,
+    val favoriteIds: Set<Int> = emptySet()
 )

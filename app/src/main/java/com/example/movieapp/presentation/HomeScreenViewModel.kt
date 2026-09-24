@@ -2,16 +2,22 @@ package com.example.movieapp.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.movieapp.domain.model.Movie
+import com.example.movieapp.domain.model.MovieDbModel
+import com.example.movieapp.domain.usecase.DeleteMovieUseCase
+import com.example.movieapp.domain.usecase.GetAllMoviesUseCase
 import com.example.movieapp.domain.usecase.GetMovieGenresUseCase
-//import com.example.movieapp.domain.usecase.GetGenresUseCase
 import com.example.movieapp.domain.usecase.GetNowPlayingUseCase
 import com.example.movieapp.domain.usecase.GetTrendingWeekUseCase
 import com.example.movieapp.domain.usecase.GetUpcomingUseCase
+import com.example.movieapp.domain.usecase.InsertMovieUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,7 +27,10 @@ class HomeScreenViewModel @Inject constructor(
     val getTrendingWeekUseCase: GetTrendingWeekUseCase,
     val getUpcomingUseCase: GetUpcomingUseCase,
     val getNowPlayingUseCase: GetNowPlayingUseCase,
-    val movieGenresUseCase: GetMovieGenresUseCase
+    val movieGenresUseCase: GetMovieGenresUseCase,
+    private val getAllMoviesUseCase: GetAllMoviesUseCase,
+    private val insertMovieUseCase: InsertMovieUseCase,
+    private val deleteMovieUseCase: DeleteMovieUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeScreenUiState())
@@ -31,6 +40,34 @@ class HomeScreenViewModel @Inject constructor(
         getBannerMovie()
         getTopMovies()
         getUpcomingMovies()
+        getFavorites()
+    }
+
+    private fun getFavorites() {
+        viewModelScope.launch {
+            getAllMoviesUseCase().collect { movies ->
+                val ids = movies.map { it.movieId }.toSet()
+                _uiState.update { it.copy(favoriteIds = ids) }
+            }
+        }
+    }
+
+    fun toggleFavorite(movie: Movie) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (movie.id in _uiState.value.favoriteIds) {
+                deleteMovieUseCase(movie.id)
+            } else {
+                insertMovieUseCase(
+                    MovieDbModel(
+                        id = 0,
+                        movieId = movie.id,
+                        title = movie.title,
+                        posterPath = movie.posterPath,
+                        voteAverage = movie.voteAverage
+                    )
+                )
+            }
+        }
     }
 
     private fun getBannerMovie() {
@@ -66,5 +103,4 @@ class HomeScreenViewModel @Inject constructor(
             _uiState.update { it.copy(upcomingObj = result) }
         }
     }
-
 }

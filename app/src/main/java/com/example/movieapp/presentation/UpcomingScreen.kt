@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -20,7 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -164,7 +167,9 @@ fun UpcomingScreen(
                                 UpcomingItem(
                                     rating = movie.voteAverage,
                                     posterPath = movie.posterPath ?: "",
-                                    onClick = { onMovieClick(movie.id) }
+                                    onClick = { onMovieClick(movie.id) },
+                                    onFavoriteClick = { viewModel.toggleFavorite(movie) },
+                                    isFavorite = movie.id in uiState.favoriteIds,
                                 )
                             }
                         }
@@ -214,7 +219,13 @@ fun UpcomingScreen(
 }
 
 @Composable
-fun UpcomingItem(rating: Double, posterPath: String, onClick: () -> Unit) {
+fun UpcomingItem(
+    rating: Double,
+    posterPath: String,
+    onClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
+    isFavorite: Boolean,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,6 +250,19 @@ fun UpcomingItem(rating: Double, posterPath: String, onClick: () -> Unit) {
                 text = String.format(Locale.US, "%.1f", rating),
                 color = Color.White,
                 fontSize = 12.sp
+            )
+        }
+        IconButton(
+            onClick = onFavoriteClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                tint = if (isFavorite) Color(0xFFE50914) else Color.White
             )
         }
     }
