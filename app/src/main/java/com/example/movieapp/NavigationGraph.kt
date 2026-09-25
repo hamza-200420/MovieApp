@@ -88,8 +88,15 @@ fun SetupNavGraph(navController: NavHostController) {
         ) {
             composable(NavRoutes.SPLASH) {
                 SplashScreen(
-                    onNavigate = {
+                    onNavigateToOnboarding = {
                         navController.navigate(NavRoutes.ONBOARDING) {
+                            popUpTo(NavRoutes.SPLASH) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onNavigateToHome = {
+                        navController.navigate(NavRoutes.HOME) {
                             popUpTo(NavRoutes.SPLASH) {
                                 inclusive = true
                             }
@@ -99,7 +106,7 @@ fun SetupNavGraph(navController: NavHostController) {
             }
 
             composable(NavRoutes.ONBOARDING) {
-                OnBoardingScreen(onButtonClick = {
+                OnBoardingScreen(onNavigateToHome = {
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(NavRoutes.ONBOARDING) {
                             inclusive = true

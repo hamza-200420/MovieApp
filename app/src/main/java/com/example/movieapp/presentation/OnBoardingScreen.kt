@@ -25,17 +25,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.movieapp.R
 
 @Composable
-fun OnBoardingScreen(onButtonClick: () -> Unit) {
+fun OnBoardingScreen(
+    viewModel: OnBoardingScreenViewModel = hiltViewModel(),
+    onNavigateToHome: () -> Unit
+) {
     Box(
         modifier = Modifier.background(
             Brush.verticalGradient(
-                colors = listOf(
-                    Color.Black,
-                    Color(0xFF181A20)
-                )
+                colors = listOf(Color.Black, Color(0xFF181A20))
             )
         )
     ) {
@@ -66,14 +67,13 @@ fun OnBoardingScreen(onButtonClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(30.dp))
             Button(
-                onClick = onButtonClick, colors = ButtonDefaults.buttonColors(
+                onClick = { viewModel.completeOnboarding(onNavigateToHome) },
+                colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFE21221),
                     contentColor = Color.White,
                 ), modifier = Modifier.size(height = 58.dp, width = 140.dp)
             ) {
-                Text(
-                    "Get Started", fontSize = 16.sp, textAlign = TextAlign.Center
-                )
+                Text("Get Started", fontSize = 16.sp, textAlign = TextAlign.Center)
             }
             Spacer(modifier = Modifier.height(50.dp))
         }

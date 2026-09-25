@@ -6,12 +6,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,13 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.movieapp.R
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
-
 @Composable
-fun SplashScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit) {
+fun SplashScreen(
+    modifier: Modifier = Modifier,
+    viewModel: SplashScreenViewModel = hiltViewModel(),
+    onNavigateToOnboarding: () -> Unit,
+    onNavigateToHome: () -> Unit
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "rotation")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -37,10 +38,16 @@ fun SplashScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit) {
         ),
         label = "iconRotation"
     )
+
     LaunchedEffect(Unit) {
         delay(2000.milliseconds)
-        onNavigate()
+        if (viewModel.isOnboardingCompleted()) {
+            onNavigateToHome()
+        } else {
+            onNavigateToOnboarding()
+        }
     }
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(R.drawable.type_logo_default__component_logo),
