@@ -23,4 +23,8 @@ class MovieLocalDataSource @Inject constructor(
     fun getAllMovies(): Flow<List<MovieEntity>> {
         return movieDao.getAllMovies()
     }
+
+    suspend fun clearAll() {
+        movieDao.clearAll()
+    }
 }

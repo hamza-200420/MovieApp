@@ -1,7 +1,9 @@
 package com.example.movieapp.di
 
+import com.example.movieapp.data.repository.AuthRepositoryImpl
 import com.example.movieapp.data.repository.MovieRepositoryImpl
 import com.example.movieapp.data.repository.OnboardingRepositoryImpl
+import com.example.movieapp.domain.repository.AuthRepository
 import com.example.movieapp.domain.repository.MovieRepository
 import com.example.movieapp.domain.repository.OnboardingRepository
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindOnboardingRepository(
         impl: OnboardingRepositoryImpl
     ): OnboardingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        impl: AuthRepositoryImpl
+    ): AuthRepository
 }

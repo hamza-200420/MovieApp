@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.movieapp.domain.model.Movie
 import com.example.movieapp.domain.model.MovieDbModel
+import com.example.movieapp.domain.usecase.CheckUserLoggedInUseCase
 import com.example.movieapp.domain.usecase.DeleteMovieUseCase
 import com.example.movieapp.domain.usecase.GetAllMoviesUseCase
 import com.example.movieapp.domain.usecase.GetMovieGenresUseCase
@@ -16,11 +17,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
@@ -30,7 +30,8 @@ class HomeScreenViewModel @Inject constructor(
     val movieGenresUseCase: GetMovieGenresUseCase,
     private val getAllMoviesUseCase: GetAllMoviesUseCase,
     private val insertMovieUseCase: InsertMovieUseCase,
-    private val deleteMovieUseCase: DeleteMovieUseCase
+    private val deleteMovieUseCase: DeleteMovieUseCase,
+    private val userLoggedInUseCase: CheckUserLoggedInUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeScreenUiState())
@@ -53,21 +54,35 @@ class HomeScreenViewModel @Inject constructor(
     }
 
     fun toggleFavorite(movie: Movie) {
+        if (!userLoggedInUseCase()) {
+            _uiState.update { it.copy(showLoginPrompt = true) }
+            return
+        }
+        val isFavorite = movie.id in _uiState.value.favoriteIds
         viewModelScope.launch(Dispatchers.IO) {
-            if (movie.id in _uiState.value.favoriteIds) {
-                deleteMovieUseCase(movie.id)
-            } else {
-                insertMovieUseCase(
-                    MovieDbModel(
-                        id = 0,
-                        movieId = movie.id,
-                        title = movie.title,
-                        posterPath = movie.posterPath,
-                        voteAverage = movie.voteAverage
+            try {
+                if (isFavorite) {
+                    deleteMovieUseCase(movie.id)
+                } else {
+                    insertMovieUseCase(
+                        MovieDbModel(
+                            id = 0,
+                            movieId = movie.id,
+                            title = movie.title,
+                            posterPath = movie.posterPath,
+                            voteAverage = movie.voteAverage
+                        )
                     )
-                )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
             }
         }
+    }
+
+    fun onLoginPromptShown() {
+        _uiState.update { it.copy(showLoginPrompt = false) }
     }
 
     private fun getBannerMovie() {

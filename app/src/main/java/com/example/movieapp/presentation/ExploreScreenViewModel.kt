@@ -11,6 +11,7 @@ import com.example.movieapp.domain.model.MovieDbModel
 import com.example.movieapp.domain.model.MovieFilter
 import com.example.movieapp.domain.model.Region
 import com.example.movieapp.domain.model.SortOption
+import com.example.movieapp.domain.usecase.CheckUserLoggedInUseCase
 import com.example.movieapp.domain.usecase.DeleteMovieUseCase
 import com.example.movieapp.domain.usecase.GetAllMoviesUseCase
 import com.example.movieapp.domain.usecase.GetFilteredMoviesPagedUseCase
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class ExploreScreenViewModel @Inject constructor(
@@ -41,41 +43,13 @@ class ExploreScreenViewModel @Inject constructor(
     private val getTvGenresUseCase: GetTvGenresUseCase,
     private val getAllMoviesUseCase: GetAllMoviesUseCase,
     private val insertMovieUseCase: InsertMovieUseCase,
-    private val deleteMovieUseCase: DeleteMovieUseCase
+    private val deleteMovieUseCase: DeleteMovieUseCase,
+    private val userLoggedInUseCase: CheckUserLoggedInUseCase
 ) : ViewModel() {
 
-    init {
-        getFavorites()
-    }
-
+    // _uiState MUST be declared before anything that touches it
     private val _uiState = MutableStateFlow(ExploreScreenUiState())
     val uiState: StateFlow<ExploreScreenUiState> = _uiState.asStateFlow()
-    private fun getFavorites() {
-        viewModelScope.launch {
-            getAllMoviesUseCase().collect { movies ->
-                val ids = movies.map { it.movieId }.toSet()
-                _uiState.update { it.copy(favoriteIds = ids) }
-            }
-        }
-    }
-
-    fun toggleFavorite(movie: Movie) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (movie.id in _uiState.value.favoriteIds) {
-                deleteMovieUseCase(movie.id)
-            } else {
-                insertMovieUseCase(
-                    MovieDbModel(
-                        id = 0,
-                        movieId = movie.id,
-                        title = movie.title,
-                        posterPath = movie.posterPath,
-                        voteAverage = movie.voteAverage
-                    )
-                )
-            }
-        }
-    }
 
     private val moviesFlow: Flow<PagingData<Movie>> = _uiState
         .map { it.appliedFilter }
@@ -100,9 +74,48 @@ class ExploreScreenViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     init {
+        getFavorites()
         _uiState.update { it.copy(movies = moviesFlow) }
         loadRegions()
         loadGenresFor(Category.MOVIE)
+    }
+
+    private fun getFavorites() {
+        viewModelScope.launch {
+            getAllMoviesUseCase().collect { movies ->
+                val ids = movies.map { it.movieId }.toSet()
+                _uiState.update { it.copy(favoriteIds = ids) }
+            }
+        }
+    }
+
+    fun toggleFavorite(movie: Movie) {
+        if (!userLoggedInUseCase()) {
+            _uiState.update { it.copy(showLoginPrompt = true) }
+            return
+        }
+        val isFavorite = movie.id in _uiState.value.favoriteIds
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (isFavorite) {
+                    deleteMovieUseCase(movie.id)
+                } else {
+                    insertMovieUseCase(
+                        MovieDbModel(
+                            id = 0,
+                            movieId = movie.id,
+                            title = movie.title,
+                            posterPath = movie.posterPath,
+                            voteAverage = movie.voteAverage
+                        )
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // TODO: surface an error
+            }
+        }
     }
 
     fun onFilterIconClicked() {
@@ -220,5 +233,9 @@ class ExploreScreenViewModel @Inject constructor(
         labels += regions.map { it.englishName }
         year?.let { labels += it.toString() }
         return labels
+    }
+
+    fun onLoginPromptShown() {
+        _uiState.update { it.copy(showLoginPrompt = false) }
     }
 }

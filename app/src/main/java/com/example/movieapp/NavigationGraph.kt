@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -32,7 +33,9 @@ import com.example.movieapp.presentation.TopTenScreen
 import com.example.movieapp.presentation.UpcomingScreen
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.movieapp.presentation.AuthScreen
 import com.example.movieapp.presentation.FavouriteScreen
+import androidx.activity.compose.BackHandler
 
 object NavRoutes {
     const val SPLASH = "splash"
@@ -42,6 +45,7 @@ object NavRoutes {
     const val FAVOURITES = "favourites"
     const val TOPTEN = "top_ten"
     const val NEWRELEASES = "new_releases"
+    const val AUTH = "auth"
 
     //    const val EXPLORE ="explore"
     const val MOVIE_DETAILS = "movie_details/{movieId}"
@@ -73,7 +77,7 @@ fun SetupNavGraph(navController: NavHostController) {
     val showBottomBar = currentRoute in bottomBarRoutes
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
@@ -123,17 +127,27 @@ fun SetupNavGraph(navController: NavHostController) {
                     },
                     onMovieClick = { movieId ->
                         navController.navigate(NavRoutes.movieDetails(movieId))
+                    },
+                    onLoginRequired = {
+                        navController.navigate(NavRoutes.AUTH) { launchSingleTop = true }
                     }
                 )
             }
 
-            composable(NavRoutes.EXPLORE) {
-                ExploreScreen()
-            }
 
             composable(NavRoutes.FAVOURITES) {
-                FavouriteScreen(onItemCLick = {movieId ->
-                    navController.navigate(NavRoutes.movieDetails(movieId))})
+                FavouriteScreen(onItemCLick = { movieId ->
+                    navController.navigate(NavRoutes.movieDetails(movieId))
+                }, onLoginRequired = {
+                    navController.navigate(
+                        NavRoutes.AUTH
+                    )
+//                    {
+////                        popUpTo(NavRoutes.FAVOURITES) {
+////                            inclusive = true
+//                        }
+//                    }
+                })
             }
 
             composable(NavRoutes.TOPTEN) {
@@ -141,7 +155,7 @@ fun SetupNavGraph(navController: NavHostController) {
                     onBackClick = { navController.popBackStack() },
                     onMovieClick = { movieId ->
                         navController.navigate(NavRoutes.movieDetails(movieId))
-                    }
+                    }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
                 )
             }
 
@@ -150,7 +164,7 @@ fun SetupNavGraph(navController: NavHostController) {
                     onBackClick = { navController.popBackStack() },
                     onMovieClick = { movieId ->
                         navController.navigate(NavRoutes.movieDetails(movieId))
-                    }
+                    }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
                 )
             }
 
@@ -162,13 +176,47 @@ fun SetupNavGraph(navController: NavHostController) {
                     onNavigateBack = { navController.popBackStack() },
                     onMovieClick = { movieId ->
                         navController.navigate(NavRoutes.movieDetails(movieId))
-                    }
+                    },
+                    onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
                 )
             }
             composable(route = NavRoutes.EXPLORE) {
                 ExploreScreen(onMovieClick = { movieId ->
                     navController.navigate(NavRoutes.movieDetails(movieId))
-                })
+                }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) })
+            }
+            composable(route = NavRoutes.AUTH) {
+
+                BackHandler {
+                    val callerRoute = navController.previousBackStackEntry?.destination?.route
+
+                    if (callerRoute == NavRoutes.FAVOURITES) {
+                        navController.popBackStack(
+                            NavRoutes.HOME,
+                            inclusive = false
+                        )
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+
+                AuthScreen(
+                    onBackClick = {
+                        val callerRoute = navController.previousBackStackEntry?.destination?.route
+
+                        if (callerRoute == NavRoutes.FAVOURITES) {
+                            navController.popBackStack(
+                                NavRoutes.HOME,
+                                inclusive = false
+                            )
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
+                    onAuthSuccess = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

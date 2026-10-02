@@ -38,12 +38,18 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -81,176 +87,201 @@ private val availableYears = (Year.now().value downTo Year.now().value - 5).toLi
 @Composable
 fun ExploreScreen(
     viewModel: ExploreScreenViewModel = hiltViewModel(),
-    onMovieClick: (Int) -> Unit = {}
+    onMovieClick: (Int) -> Unit = {},
+    onLoginRequired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lazyMovies = uiState.movies.collectAsLazyPagingItems()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Search", color = Color.Gray) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                },
-                singleLine = true,
-                enabled = false,
-                shape = RoundedCornerShape(25),
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = Color.LightGray,
-                    disabledPlaceholderColor = Color.Gray,
-                    disabledLeadingIconColor = Color.Gray,
-                    disabledContainerColor = Color.Transparent
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.showLoginPrompt) {
+        if (uiState.showLoginPrompt) {
+            try {
+                val result = snackbarHostState.showSnackbar(
+                    message = "Please log in to save favourites",
+                    actionLabel = "Login",
+                    duration = SnackbarDuration.Short
                 )
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF5F5F5))
-                    .clickable { viewModel.onFilterIconClicked() }
-                    .size(56.dp), contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.group),
-                    contentDescription = "Filter",
-                    tint = Color(0xFFE21221)
-                )
-            }
-        }
-
-        val activeChips = uiState.activeFilterLabels
-        if (activeChips.isNotEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                activeChips.forEach { label ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(Color(0xFFE21221))
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
-                            .height(height = 38.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = label, color = Color.White, fontSize = 16.sp)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        when (val refreshState = lazyMovies.loadState.refresh) {
-            is LoadState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            is LoadState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(refreshState.error.localizedMessage ?: "Something went wrong")
-                        Button(onClick = { lazyMovies.retry() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-
-            else -> {
-                if (lazyMovies.itemCount == 0) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No results for this filter")
-                    }
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(
-                            count = lazyMovies.itemCount,
-                            key = { index -> "${lazyMovies.peek(index)?.id}_$index" }
-                        ) { index ->
-                            val movie = lazyMovies[index]
-                            if (movie != null) {
-                                ExploreMovieItem(
-                                    rating = movie.voteAverage,
-                                    posterPath = movie.posterPath ?: "",
-                                    isFavorite = movie.id in uiState.favoriteIds,
-                                    onClick = { onMovieClick(movie.id) },
-                                    onFavoriteClick = { viewModel.toggleFavorite(movie) }
-                                )
-                            }
-                        }
-
-                        when (val appendState = lazyMovies.loadState.append) {
-                            is LoadState.Loading -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) { CircularProgressIndicator() }
-                                }
-                            }
-
-                            is LoadState.Error -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(
-                                                appendState.error.localizedMessage
-                                                    ?: "Couldn't load more"
-                                            )
-                                            Button(onClick = { lazyMovies.retry() }) { Text("Retry") }
-                                        }
-                                    }
-                                }
-                            }
-
-                            else -> {}
-                        }
-                    }
-                }
+                if (result == SnackbarResult.ActionPerformed) onLoginRequired()
+            } finally {
+                viewModel.onLoginPromptShown()
             }
         }
     }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Search", color = Color.Gray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = null,
+                            tint = Color.Gray
+                        )
+                    },
+                    singleLine = true,
+                    enabled = false,
+                    shape = RoundedCornerShape(25),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledBorderColor = Color.LightGray,
+                        disabledPlaceholderColor = Color.Gray,
+                        disabledLeadingIconColor = Color.Gray,
+                        disabledContainerColor = Color.Transparent
+                    )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFF5F5F5))
+                        .clickable { viewModel.onFilterIconClicked() }
+                        .size(56.dp), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.group),
+                        contentDescription = "Filter",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            val activeChips = uiState.activeFilterLabels
+            if (activeChips.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    activeChips.forEach { label ->
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(horizontal = 20.dp, vertical = 8.dp)
+                                .height(height = 38.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = label, color = Color.White, fontSize = 16.sp)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            when (val refreshState = lazyMovies.loadState.refresh) {
+                is LoadState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                is LoadState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(refreshState.error.localizedMessage ?: "Something went wrong")
+                            Button(onClick = { lazyMovies.retry() }) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    if (lazyMovies.itemCount == 0) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No results for this filter")
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(
+                                count = lazyMovies.itemCount,
+                                key = { index -> "${lazyMovies.peek(index)?.id}_$index" }
+                            ) { index ->
+                                val movie = lazyMovies[index]
+                                if (movie != null) {
+                                    ExploreMovieItem(
+                                        rating = movie.voteAverage,
+                                        posterPath = movie.posterPath ?: "",
+                                        isFavorite = movie.id in uiState.favoriteIds,
+                                        onClick = { onMovieClick(movie.id) },
+                                        onFavoriteClick = { viewModel.toggleFavorite(movie) }
+                                    )
+                                }
+                            }
+
+                            when (val appendState = lazyMovies.loadState.append) {
+                                is LoadState.Loading -> {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) { CircularProgressIndicator() }
+                                    }
+                                }
+
+                                is LoadState.Error -> {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(
+                                                    appendState.error.localizedMessage
+                                                        ?: "Couldn't load more"
+                                                )
+                                                Button(onClick = { lazyMovies.retry() }) { Text("Retry") }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+
 
     if (uiState.isFilterSheetVisible) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
             onDismissRequest = { viewModel.onDismissFilterSheet() },
-            sheetState = sheetState, containerColor = Color.White,
+            sheetState = sheetState, containerColor = MaterialTheme.colorScheme.background,
             dragHandle = {
                 Box(
                     modifier = Modifier
@@ -436,7 +467,7 @@ private fun FilterSheetContent(
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFCE7E9),
-                    contentColor = Color(0xFFE21221)
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
             ) { Text("Reset", fontSize = 16.sp) }
 
@@ -447,8 +478,8 @@ private fun FilterSheetContent(
                     .size(height = 58.dp, width = 184.dp),
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE21221),
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) { Text("Apply", fontSize = 16.sp) }
         }
@@ -469,16 +500,16 @@ private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit
         },
         shape = RoundedCornerShape(50),
         colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color.White,
-            labelColor = Color(0xFFE21221),
-            selectedContainerColor = Color(0xFFE21221),
-            selectedLabelColor = Color.White
+            containerColor = MaterialTheme.colorScheme.background,
+            labelColor = MaterialTheme.colorScheme.primary,
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
         ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = selected,
-            borderColor = Color(0xFFE21221),
-            selectedBorderColor = Color(0xFFE21221),
+            borderColor = MaterialTheme.colorScheme.primary,
+            selectedBorderColor = MaterialTheme.colorScheme.primary,
             borderWidth = 1.dp,
             selectedBorderWidth = 1.dp
         )
@@ -521,12 +552,15 @@ private fun ExploreMovieItem(
         Box(
             modifier = Modifier
                 .padding(8.dp)
-                .background(color = Color(0xFFE21221), shape = RoundedCornerShape(6.dp))
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(6.dp)
+                )
                 .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Text(
                 text = String.format(Locale.US, "%.1f", rating),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 12.sp
             )
         }
@@ -540,7 +574,7 @@ private fun ExploreMovieItem(
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                tint = if (isFavorite) Color(0xFFE50914) else Color.White
+                tint = if (isFavorite) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
             )
         }
     }

@@ -41,6 +41,7 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         delay(2000.milliseconds)
+//        viewModel.clearSessionIfNotRemembered()
         if (viewModel.isOnboardingCompleted()) {
             onNavigateToHome()
         } else {

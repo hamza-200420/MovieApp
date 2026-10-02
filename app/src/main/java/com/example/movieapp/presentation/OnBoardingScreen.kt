@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -69,8 +70,8 @@ fun OnBoardingScreen(
             Button(
                 onClick = { viewModel.completeOnboarding(onNavigateToHome) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE21221),
-                    contentColor = Color.White,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ), modifier = Modifier.size(height = 58.dp, width = 140.dp)
             ) {
                 Text("Get Started", fontSize = 16.sp, textAlign = TextAlign.Center)

@@ -23,6 +23,7 @@ class OnboardingPreferencesDataSource @Inject constructor(
 
     private object PreferencesKeys {
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        val REMEMBER_ME = booleanPreferencesKey("remember_me")
     }
     val isOnboardingCompleted: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false
@@ -31,6 +32,15 @@ class OnboardingPreferencesDataSource @Inject constructor(
     suspend fun setOnboardingCompleted(completed: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.ONBOARDING_COMPLETED] = completed
+        }
+    }
+    val rememberMe: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.REMEMBER_ME] ?: true
+    }
+
+    suspend fun setRememberMe(remember: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REMEMBER_ME] = remember
         }
     }
 }

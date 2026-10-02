@@ -9,5 +9,6 @@ data class HomeScreenUiState(
     val topTenObj: MoviePage? = null,
     val genreList: List<Genre> = emptyList(),
     val genreNames: List<String> = emptyList(),
-    val favoriteIds: Set<Int> = emptySet()
+    val favoriteIds: Set<Int> = emptySet(),
+    val showLoginPrompt: Boolean = false
 )

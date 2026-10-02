@@ -1,11 +1,13 @@
 package com.example.movieapp.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,18 +19,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,41 +47,73 @@ import java.util.Locale
 fun FavouriteScreen(
     viewModel: FavouriteScreenViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
-    onItemCLick: (Int) -> Unit
+    onItemCLick: (Int) -> Unit,
+    onLoginRequired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    LaunchedEffect(Unit) {
+        if (!viewModel.isAlreadyLogin()) onLoginRequired()
+    }
+    val context = LocalContext.current
+    LaunchedEffect(uiState.logoutError) {
+        if (uiState.logoutError.isNotEmpty()) {
+            Toast.makeText(context, uiState.logoutError, Toast.LENGTH_SHORT).show()
+            viewModel.clearLogoutError()
+        }
+    }
+    if (!viewModel.isAlreadyLogin()) return
     Column(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        Text(
-            text = "My Bookmarks",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "My Bookmarks",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+            IconButton(
+                onClick = { viewModel.logoutUser(onLoggedOut = onLoginRequired) },
+                enabled = !uiState.isLoggingOut
             ) {
-                items(uiState.movies) { movie ->
-                    FavouriteItem(
-                        rating = movie.voteAverage,
-                        posterPath = movie.posterPath ?: "",
-                        onClick = { onItemCLick(movie.movieId) },
-                        onDeleteClick = { viewModel.removeFavorite(movie.movieId) }
-                    )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "Logout"
+                )
+            }
+        }
+
+        when {
+            uiState.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            uiState.movies.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No favourites yet")
+                }
+            }
+
+            else -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.movies, key = { it.movieId }) { movie ->
+                        FavouriteItem(
+                            rating = movie.voteAverage,
+                            posterPath = movie.posterPath ?: "",
+                            onClick = { onItemCLick(movie.movieId) },
+                            onDeleteClick = { viewModel.removeFavorite(movie.movieId) }
+                        )
+                    }
                 }
             }
         }
@@ -111,7 +149,7 @@ fun FavouriteItem(
         ) {
             Text(
                 text = String.format(Locale.US, "%.1f", rating),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 12.sp
             )
         }
@@ -125,7 +163,7 @@ fun FavouriteItem(
             Icon(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = "Remove from favorites",
-                tint = Color(0xFFE50914)
+                tint = Color(0xFFE21221)
             )
         }
     }

@@ -6,8 +6,10 @@ import androidx.paging.PagingData
 import com.example.movieapp.data.local.datasource.MovieLocalDataSource
 import com.example.movieapp.data.local.mapper.toDomain
 import com.example.movieapp.data.local.mapper.toEntity
+import com.example.movieapp.data.remote.datasource.MovieFirestoreDataSource
 import com.example.movieapp.data.remote.datasource.MovieRemoteDataSource
 import com.example.movieapp.data.remote.mapper.toDomain
+import com.example.movieapp.data.remote.mapper.toFirestoreDto
 import com.example.movieapp.data.remote.paging.GenericMoviePagingSource
 import com.example.movieapp.domain.model.Genre
 import com.example.movieapp.domain.model.Movie
@@ -22,7 +24,7 @@ import javax.inject.Inject
 
 class MovieRepositoryImpl @Inject constructor(
     private val remoteDataSource: MovieRemoteDataSource,
-    private val localDataSource: MovieLocalDataSource
+    private val firestoreDataSource: MovieFirestoreDataSource
 ) : MovieRepository {
 
     override suspend fun getNowPlaying(page: Int): MoviePage {
@@ -135,20 +137,18 @@ class MovieRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertMovie(movie: MovieDbModel) {
-        localDataSource.insertMovie(movie.toEntity())
+        firestoreDataSource.insertMovie(movie.toFirestoreDto())
     }
 
     override suspend fun deleteMovie(movieId: Int) {
-        localDataSource.deleteMovieById(movieId)
+        firestoreDataSource.deleteMovieById(movieId)
     }
 
     override suspend fun isMovieSaved(movieId: Int): Boolean {
-        return localDataSource.isMovieSaved(movieId)
+        return firestoreDataSource.isMovieSaved(movieId)
     }
 
     override fun getAllMovies(): Flow<List<MovieDbModel>> {
-        return localDataSource.getAllMovies().map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return firestoreDataSource.getAllMovies().map { list -> list.map { it.toDomain() } }
     }
 }

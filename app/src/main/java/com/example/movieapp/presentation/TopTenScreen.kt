@@ -28,10 +28,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,7 +63,8 @@ import java.util.Locale
 fun TopTenScreen(
     viewModel: TopTenScreenViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onMovieClick: (Int) -> Unit
+    onMovieClick: (Int) -> Unit,
+    onLoginRequired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lazyMovies = if (uiState.searchQuery.isBlank()) {
@@ -66,155 +73,183 @@ fun TopTenScreen(
         viewModel.searchResultsFlow.collectAsLazyPagingItems()
     }
     var isSearchActive by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-
-            if (isSearchActive) {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = viewModel::onSearchQueryChanged,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp),
-                    placeholder = { Text("Search loaded movies...", color = Color.Gray) },
-                    singleLine = true,
-                    textStyle = TextStyle(color = Color.Black),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedPlaceholderColor = Color.Gray,
-                        unfocusedPlaceholderColor = Color.Gray,
-                        focusedBorderColor = Color.Black,
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            isSearchActive = false
-                            viewModel.onSearchQueryChanged("")
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Close search", tint = Color.Black
-                            )
-                        }
-                    }
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.showLoginPrompt) {
+        if (uiState.showLoginPrompt) {
+            try {
+                val result = snackbarHostState.showSnackbar(
+                    message = "Please log in to save favourites",
+                    actionLabel = "Login",
+                    duration = SnackbarDuration.Short
                 )
-            } else {
-                Text(
-                    text = "Top 10 Movies This Week",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = { isSearchActive = true }) {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
-                }
+                if (result == SnackbarResult.ActionPerformed) onLoginRequired()
+            } finally {
+                viewModel.onLoginPromptShown()
             }
         }
+    }
 
-        when (val refreshState = lazyMovies.loadState.refresh) {
-            is LoadState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+    Box (modifier = Modifier.fillMaxSize()){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
                 }
-            }
 
-            is LoadState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(refreshState.error.localizedMessage ?: "Something went wrong")
-                        Button(onClick = { lazyMovies.retry() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-
-            else -> {
-                if (lazyMovies.itemCount == 0) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No movies found")
-                    }
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(
-                            count = lazyMovies.itemCount,
-                            key = { index -> "${lazyMovies.peek(index)?.id}_$index" }
-                        ) { index ->
-                            val movie = lazyMovies[index]
-                            if (movie != null) {
-                                TopTenMovieItem(
-                                    rating = movie.voteAverage,
-                                    posterPath = movie.posterPath ?: "",
-                                    onClick = { onMovieClick(movie.id) },
-                                    onFavoriteClick = { viewModel.toggleFavorite(movie) },
-                                    isFavorite = movie.id in uiState.favoriteIds,
+                if (isSearchActive) {
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = viewModel::onSearchQueryChanged,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp),
+                        placeholder = { Text("Search loaded movies...", color = Color.Gray) },
+                        singleLine = true,
+                        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedPlaceholderColor = Color.Gray,
+                            unfocusedPlaceholderColor = Color.Gray,
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                isSearchActive = false
+                                viewModel.onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = "Close search",
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
+                    )
+                } else {
+                    Text(
+                        text = "Top 10 Movies This Week",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { isSearchActive = true }) {
+                        Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
+                    }
+                }
+            }
 
-                        when (val appendState = lazyMovies.loadState.append) {
-                            is LoadState.Loading -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
+            when (val refreshState = lazyMovies.loadState.refresh) {
+                is LoadState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                is LoadState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(refreshState.error.localizedMessage ?: "Something went wrong")
+                            Button(onClick = { lazyMovies.retry() }) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    if (lazyMovies.itemCount == 0) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No movies found")
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(
+                                count = lazyMovies.itemCount,
+                                key = { index -> "${lazyMovies.peek(index)?.id}_$index" }
+                            ) { index ->
+                                val movie = lazyMovies[index]
+                                if (movie != null) {
+                                    TopTenMovieItem(
+                                        rating = movie.voteAverage,
+                                        posterPath = movie.posterPath ?: "",
+                                        onClick = { onMovieClick(movie.id) },
+                                        onFavoriteClick = { viewModel.toggleFavorite(movie) },
+                                        isFavorite = movie.id in uiState.favoriteIds,
+                                    )
                                 }
                             }
 
-                            is LoadState.Error -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(
-                                                appendState.error.localizedMessage
-                                                    ?: "Couldn't load more"
-                                            )
-                                            Button(onClick = { lazyMovies.retry() }) {
-                                                Text("Retry")
+                            when (val appendState = lazyMovies.loadState.append) {
+                                is LoadState.Loading -> {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+
+                                is LoadState.Error -> {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(
+                                                    appendState.error.localizedMessage
+                                                        ?: "Couldn't load more"
+                                                )
+                                                Button(onClick = { lazyMovies.retry() }) {
+                                                    Text("Retry")
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            else -> {}
+                                else -> {}
+                            }
                         }
                     }
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -261,7 +296,7 @@ fun TopTenMovieItem(
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                tint = if (isFavorite) Color(0xFFE50914) else Color.White
+                tint = if (isFavorite) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
             )
         }
     }
