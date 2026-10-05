@@ -99,7 +99,8 @@ class HomeScreenViewModel @Inject constructor(
                 it.copy(
                     bannerObj = bannerResult,
                     genreList = genres,
-                    genreNames = genreNames
+                    genreNames = genreNames,
+                    isBannerLoading = false
                 )
             }
         }
@@ -108,14 +109,14 @@ class HomeScreenViewModel @Inject constructor(
     private fun getTopMovies() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = getTrendingWeekUseCase()
-            _uiState.update { it.copy(topTenObj = result) }
+            _uiState.update { it.copy(topTenObj = result, isTopTenLoading = false) }
         }
     }
 
     private fun getUpcomingMovies() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = getUpcomingUseCase()
-            _uiState.update { it.copy(upcomingObj = result) }
+            _uiState.update { it.copy(upcomingObj = result, isUpcomingLoading = false) }
         }
     }
 }

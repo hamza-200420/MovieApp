@@ -87,9 +87,7 @@ fun FavouriteScreen(
 
         when {
             uiState.isLoading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+               FavouriteScreenShimmer()
             }
 
             uiState.movies.isEmpty() -> {

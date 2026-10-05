@@ -78,168 +78,171 @@ fun HomeScreen(
             }
         }
     }
-    Box (modifier = Modifier.fillMaxSize()){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            Box(
+    if (uiState.isBannerLoading || uiState.isTopTenLoading || uiState.isUpcomingLoading) {
+        HomeScreenShimmer()
+    } else
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                val data = uiState.bannerObj?.movies?.firstOrNull()
-                AsyncImage(
-                    model = data?.backdropPath?.let {
-                        "https://image.tmdb.org/t/p/w1280$it"
-                    },
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                Column(
+                Box(
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 20.dp, bottom = 28.dp)
+                        .fillMaxWidth()
+                        .height(400.dp)
                 ) {
-                    Text(
-                        data?.title ?: "",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 24.sp
+                    val data = uiState.bannerObj?.movies?.firstOrNull()
+                    AsyncImage(
+                        model = data?.backdropPath?.let {
+                            "https://image.tmdb.org/t/p/w1280$it"
+                        },
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Text(
-                        "${uiState.genreNames.joinToString(", ")}...",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 12.sp,
-                    )
-                    Row {
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(50),
-                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Play",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(15.dp))
-                        OutlinedButton(
-                            onClick = {},
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(width = 1.dp, color = Color.White),
-                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "My List",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 20.dp, bottom = 28.dp)
+                    ) {
+                        Text(
+                            data?.title ?: "",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = 24.sp
+                        )
+                        Text(
+                            "${uiState.genreNames.joinToString(", ")}...",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = 12.sp,
+                        )
+                        Row {
+                            Button(
+                                onClick = {},
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                ),
+                                shape = RoundedCornerShape(50),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.PlayArrow,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Play",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(15.dp))
+                            OutlinedButton(
+                                onClick = {},
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                shape = RoundedCornerShape(50),
+                                border = BorderStroke(width = 1.dp, color = Color.White),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "My List",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Top 10 Movies This Week",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    "See all",
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable(onClick = onToptenClick),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(
-                    items = uiState.topTenObj?.movies?.take(10) ?: emptyList()
-                ) { movie ->
-                    MovieItem(
-                        rating = movie.voteAverage,
-                        posterPath = movie.posterPath ?: "",
-                        isFavorite = movie.id in uiState.favoriteIds,
-                        onClick = { onMovieClick(movie.id) },
-                        onFavoriteClick = { viewModel.toggleFavorite(movie) }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Top 10 Movies This Week",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "See all",
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable(onClick = onToptenClick),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "New Releases",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    "See all",
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable(onClick = onUpcomingCLick),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(
-                    items = uiState.upcomingObj?.movies?.take(10) ?: emptyList()
-                ) { movie ->
-                    MovieItem(
-                        rating = movie.voteAverage,
-                        posterPath = movie.posterPath ?: "",
-                        isFavorite = movie.id in uiState.favoriteIds,
-                        onClick = { onMovieClick(movie.id) },
-                        onFavoriteClick = { viewModel.toggleFavorite(movie) }
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = uiState.topTenObj?.movies?.take(10) ?: emptyList()
+                    ) { movie ->
+                        MovieItem(
+                            rating = movie.voteAverage,
+                            posterPath = movie.posterPath ?: "",
+                            isFavorite = movie.id in uiState.favoriteIds,
+                            onClick = { onMovieClick(movie.id) },
+                            onFavoriteClick = { viewModel.toggleFavorite(movie) }
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "New Releases",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "See all",
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable(onClick = onUpcomingCLick),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = uiState.upcomingObj?.movies?.take(10) ?: emptyList()
+                    ) { movie ->
+                        MovieItem(
+                            rating = movie.voteAverage,
+                            posterPath = movie.posterPath ?: "",
+                            isFavorite = movie.id in uiState.favoriteIds,
+                            onClick = { onMovieClick(movie.id) },
+                            onFavoriteClick = { viewModel.toggleFavorite(movie) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-    }
 }
 
 

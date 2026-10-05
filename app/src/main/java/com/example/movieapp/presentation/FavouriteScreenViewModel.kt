@@ -35,7 +35,12 @@ class FavouriteScreenViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
-                _uiState.update { it.copy(movies = movies, isLoading = false) }
+                if (!checkUserLoggedInUseCase()) {
+                    // Logged out: clear the list and keep the shimmer until the next login.
+                    _uiState.update { it.copy(movies = emptyList(), isLoading = true) }
+                } else {
+                    _uiState.update { it.copy(movies = movies, isLoading = false) }
+                }
             }
         }
     }

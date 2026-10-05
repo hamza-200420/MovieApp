@@ -47,7 +47,6 @@ class ExploreScreenViewModel @Inject constructor(
     private val userLoggedInUseCase: CheckUserLoggedInUseCase
 ) : ViewModel() {
 
-    // _uiState MUST be declared before anything that touches it
     private val _uiState = MutableStateFlow(ExploreScreenUiState())
     val uiState: StateFlow<ExploreScreenUiState> = _uiState.asStateFlow()
 
@@ -113,7 +112,6 @@ class ExploreScreenViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // TODO: surface an error
             }
         }
     }

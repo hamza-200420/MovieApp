@@ -154,9 +154,7 @@ fun UpcomingScreen(
 
             when (val refreshState = lazyMovies.loadState.refresh) {
                 is LoadState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    UpcomingScreenShimmer()
                 }
 
                 is LoadState.Error -> {

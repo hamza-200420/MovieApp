@@ -10,5 +10,8 @@ data class HomeScreenUiState(
     val genreList: List<Genre> = emptyList(),
     val genreNames: List<String> = emptyList(),
     val favoriteIds: Set<Int> = emptySet(),
-    val showLoginPrompt: Boolean = false
+    val showLoginPrompt: Boolean = false,
+    val isBannerLoading: Boolean = true,
+    val isTopTenLoading: Boolean = true,
+    val isUpcomingLoading: Boolean = true
 )

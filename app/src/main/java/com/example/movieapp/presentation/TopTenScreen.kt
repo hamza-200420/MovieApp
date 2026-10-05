@@ -156,9 +156,7 @@ fun TopTenScreen(
 
             when (val refreshState = lazyMovies.loadState.refresh) {
                 is LoadState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                   TopTenScreenShimmer()
                 }
 
                 is LoadState.Error -> {

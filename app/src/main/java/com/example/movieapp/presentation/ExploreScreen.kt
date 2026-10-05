@@ -28,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -184,13 +183,14 @@ fun ExploreScreen(
 
             when (val refreshState = lazyMovies.loadState.refresh) {
                 is LoadState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    ExploreScreenShimmer()
                 }
 
                 is LoadState.Error -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(refreshState.error.localizedMessage ?: "Something went wrong")
                             Button(onClick = { lazyMovies.retry() }) {
@@ -257,7 +257,11 @@ fun ExploreScreen(
                                                     appendState.error.localizedMessage
                                                         ?: "Couldn't load more"
                                                 )
-                                                Button(onClick = { lazyMovies.retry() }) { Text("Retry") }
+                                                Button(onClick = { lazyMovies.retry() }) {
+                                                    Text(
+                                                        "Retry"
+                                                    )
+                                                }
                                             }
                                         }
                                     }
