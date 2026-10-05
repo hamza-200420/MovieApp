@@ -5,6 +5,7 @@ import com.example.movieapp.data.remote.dto.CountryDto
 import com.example.movieapp.data.remote.dto.GenreListDto
 import com.example.movieapp.data.remote.dto.MovieDetailsDto
 import com.example.movieapp.data.remote.dto.MoviePageDto
+import com.example.movieapp.data.remote.dto.TvDetailsDto
 import com.example.movieapp.data.remote.dto.TvPageDto
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -88,4 +89,11 @@ interface MovieApi {
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("language") language: String = "en-US"
     ): TvPageDto
+
+    @GET("tv/{tv_id}")
+    suspend fun getTvDetails(
+        @Path("tv_id") tvId: Int,
+        @Query("api_key") apiKey: String = BuildConfig.TMDB_API_KEY,
+        @Query("append_to_response") appendToResponse: String = "credits,videos,reviews,similar,content_ratings"
+    ): TvDetailsDto
 }

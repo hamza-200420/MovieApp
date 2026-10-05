@@ -47,7 +47,7 @@ import java.util.Locale
 fun FavouriteScreen(
     viewModel: FavouriteScreenViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
-    onItemCLick: (Int) -> Unit,
+    onItemCLick: (Int, String) -> Unit,
     onLoginRequired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,8 +108,8 @@ fun FavouriteScreen(
                         FavouriteItem(
                             rating = movie.voteAverage,
                             posterPath = movie.posterPath ?: "",
-                            onClick = { onItemCLick(movie.movieId) },
-                            onDeleteClick = { viewModel.removeFavorite(movie.movieId) }
+                            onClick = { onItemCLick(movie.movieId, movie.mediaType) },
+                            onDeleteClick = { viewModel.removeFavorite(movie.movieId, movie.mediaType) }
                         )
                     }
                 }

@@ -86,7 +86,7 @@ private val availableYears = (Year.now().value downTo Year.now().value - 5).toLi
 @Composable
 fun ExploreScreen(
     viewModel: ExploreScreenViewModel = hiltViewModel(),
-    onMovieClick: (Int) -> Unit = {},
+    onMovieClick: (Int, String) -> Unit ,
     onLoginRequired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -225,8 +225,8 @@ fun ExploreScreen(
                                     ExploreMovieItem(
                                         rating = movie.voteAverage,
                                         posterPath = movie.posterPath ?: "",
-                                        isFavorite = movie.id in uiState.favoriteIds,
-                                        onClick = { onMovieClick(movie.id) },
+                                        isFavorite = "${movie.mediaType}_${movie.id}" in uiState.favoriteKeys,
+                                        onClick = { onMovieClick(movie.id, movie.mediaType) },
                                         onFavoriteClick = { viewModel.toggleFavorite(movie) }
                                     )
                                 }

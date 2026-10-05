@@ -5,6 +5,7 @@ import com.example.movieapp.data.remote.dto.CountryDto
 import com.example.movieapp.data.remote.dto.GenreListDto
 import com.example.movieapp.data.remote.dto.MovieDetailsDto
 import com.example.movieapp.data.remote.dto.MoviePageDto
+import com.example.movieapp.data.remote.dto.TvDetailsDto
 import com.example.movieapp.data.remote.dto.TvPageDto
 import javax.inject.Inject
 
@@ -77,5 +78,8 @@ class MovieRemoteDataSource @Inject constructor(
             withOriginCountry = region,
             firstAirDateYear = timePeriod
         )
+    }
+    suspend fun getTvDetails(tvId: Int): TvDetailsDto {
+        return api.getTvDetails(tvId = tvId)
     }
 }

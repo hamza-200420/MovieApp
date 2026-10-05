@@ -16,7 +16,7 @@ interface MovieRepository {
     suspend fun getGenres(): List<Genre>
     fun getTrendingWeekPaged(): Flow<PagingData<Movie>>
     fun getUpcomingPaged(): Flow<PagingData<Movie>>
-    suspend fun getMovieDetails(movieId: Int): MovieDetails
+    suspend fun getMovieDetails(movieId: Int, mediaType: String): MovieDetails
     fun searchMoviesPaged(query: String): Flow<PagingData<Movie>>
     suspend fun getRegions(): List<Region>
     suspend fun getMovieGenres(): List<Genre>
@@ -36,7 +36,7 @@ interface MovieRepository {
     ): Flow<PagingData<Movie>>
 
     suspend fun insertMovie(movie: MovieDbModel)
-    suspend fun deleteMovie(movieId: Int)
-    suspend fun isMovieSaved(movieId: Int): Boolean
+    suspend fun deleteMovie(movieId: Int, mediaType: String)
+    suspend fun isMovieSaved(movieId: Int, mediaType: String): Boolean
     fun getAllMovies(): Flow<List<MovieDbModel>>
 }

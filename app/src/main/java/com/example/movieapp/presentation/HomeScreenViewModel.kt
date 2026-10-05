@@ -47,7 +47,10 @@ class HomeScreenViewModel @Inject constructor(
     private fun getFavorites() {
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
-                val ids = movies.map { it.movieId }.toSet()
+                val ids = movies
+                    .filter { it.mediaType == "movie" }
+                    .map { it.movieId }
+                    .toSet()
                 _uiState.update { it.copy(favoriteIds = ids) }
             }
         }
@@ -62,7 +65,7 @@ class HomeScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (isFavorite) {
-                    deleteMovieUseCase(movie.id)
+                    deleteMovieUseCase(movie.id, "movie")
                 } else {
                     insertMovieUseCase(
                         MovieDbModel(
@@ -70,7 +73,8 @@ class HomeScreenViewModel @Inject constructor(
                             movieId = movie.id,
                             title = movie.title,
                             posterPath = movie.posterPath,
-                            voteAverage = movie.voteAverage
+                            voteAverage = movie.voteAverage,
+                            mediaType = "movie"
                         )
                     )
                 }

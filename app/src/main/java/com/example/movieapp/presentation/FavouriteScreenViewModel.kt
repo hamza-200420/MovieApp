@@ -36,7 +36,6 @@ class FavouriteScreenViewModel @Inject constructor(
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
                 if (!checkUserLoggedInUseCase()) {
-                    // Logged out: clear the list and keep the shimmer until the next login.
                     _uiState.update { it.copy(movies = emptyList(), isLoading = true) }
                 } else {
                     _uiState.update { it.copy(movies = movies, isLoading = false) }
@@ -45,10 +44,10 @@ class FavouriteScreenViewModel @Inject constructor(
         }
     }
 
-    fun removeFavorite(id: Int) {
+    fun removeFavorite(id: Int, mediaType: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                deleteMovieUseCase(id)
+                deleteMovieUseCase(id, mediaType)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

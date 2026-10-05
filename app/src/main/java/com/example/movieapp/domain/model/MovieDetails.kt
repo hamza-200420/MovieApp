@@ -17,4 +17,5 @@ data class MovieDetails(
     val similarMovies: List<Movie>,
     val reviews: List<Review>,
     val releaseCountry: String?,
+    val mediaType: String = "movie"
 )

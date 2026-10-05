@@ -82,8 +82,8 @@ class ExploreScreenViewModel @Inject constructor(
     private fun getFavorites() {
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
-                val ids = movies.map { it.movieId }.toSet()
-                _uiState.update { it.copy(favoriteIds = ids) }
+                val keys = movies.map { "${it.mediaType}_${it.movieId}" }.toSet()
+                _uiState.update { it.copy(favoriteKeys = keys) }
             }
         }
     }
@@ -93,11 +93,11 @@ class ExploreScreenViewModel @Inject constructor(
             _uiState.update { it.copy(showLoginPrompt = true) }
             return
         }
-        val isFavorite = movie.id in _uiState.value.favoriteIds
+        val isFavorite = "${movie.mediaType}_${movie.id}" in _uiState.value.favoriteKeys
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (isFavorite) {
-                    deleteMovieUseCase(movie.id)
+                    deleteMovieUseCase(movie.id, movie.mediaType)
                 } else {
                     insertMovieUseCase(
                         MovieDbModel(
@@ -105,7 +105,8 @@ class ExploreScreenViewModel @Inject constructor(
                             movieId = movie.id,
                             title = movie.title,
                             posterPath = movie.posterPath,
-                            voteAverage = movie.voteAverage
+                            voteAverage = movie.voteAverage,
+                            mediaType = movie.mediaType
                         )
                     )
                 }

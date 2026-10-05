@@ -48,160 +48,153 @@ object NavRoutes {
     const val AUTH = "auth"
 
     //    const val EXPLORE ="explore"
-    const val MOVIE_DETAILS = "movie_details/{movieId}"
+    const val DETAILS = "details/{type}/{id}"
 
-    fun movieDetails(movieId: Int) = "movie_details/$movieId"
-}
+    fun details(id: Int, mediaType: String) = "details/$mediaType/$id"
+    fun movieDetails(movieId: Int) = details(movieId, "movie")
 
-sealed class BottomNavItem(
-    val route: String,
-    val title: String,
-    @DrawableRes val icon: Int
-) {
-    object Home : BottomNavItem(NavRoutes.HOME, "Home", R.drawable.home)
-    object Explore : BottomNavItem(NavRoutes.EXPLORE, "Explore", R.drawable.explore)
-    object Favourite : BottomNavItem(NavRoutes.FAVOURITES, "Favourite", R.drawable.profile)
-}
 
-@Composable
-fun SetupNavGraph(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    sealed class BottomNavItem(
+        val route: String,
+        val title: String,
+        @DrawableRes val icon: Int
+    ) {
+        object Home : BottomNavItem(NavRoutes.HOME, "Home", R.drawable.home)
+        object Explore : BottomNavItem(NavRoutes.EXPLORE, "Explore", R.drawable.explore)
+        object Favourite : BottomNavItem(NavRoutes.FAVOURITES, "Favourite", R.drawable.profile)
+    }
 
-    val bottomBarRoutes = listOf(
-        NavRoutes.HOME,
-        NavRoutes.EXPLORE,
-        NavRoutes.FAVOURITES
-    )
+    @Composable
+    fun SetupNavGraph(navController: NavHostController) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute in bottomBarRoutes
+        val bottomBarRoutes = listOf(
+            NavRoutes.HOME,
+            NavRoutes.EXPLORE,
+            NavRoutes.FAVOURITES
+        )
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (showBottomBar) {
-                AppBottomNavigationBar(navController = navController)
+        val showBottomBar = currentRoute in bottomBarRoutes
+
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            bottomBar = {
+                if (showBottomBar) {
+                    AppBottomNavigationBar(navController = navController)
+                }
             }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = NavRoutes.SPLASH,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(NavRoutes.SPLASH) {
-                SplashScreen(
-                    onNavigateToOnboarding = {
-                        navController.navigate(NavRoutes.ONBOARDING) {
-                            popUpTo(NavRoutes.SPLASH) {
-                                inclusive = true
-                            }
-                        }
-                    },
-                    onNavigateToHome = {
-                        navController.navigate(NavRoutes.HOME) {
-                            popUpTo(NavRoutes.SPLASH) {
-                                inclusive = true
-                            }
-                        }
-                    }
-                )
-            }
-
-            composable(NavRoutes.ONBOARDING) {
-                OnBoardingScreen(onNavigateToHome = {
-                    navController.navigate(NavRoutes.HOME) {
-                        popUpTo(NavRoutes.ONBOARDING) {
-                            inclusive = true
-                        }
-                    }
-                })
-            }
-
-            composable(NavRoutes.HOME) {
-                HomeScreen(
-                    onToptenClick = { navController.navigate(NavRoutes.TOPTEN) },
-                    onUpcomingCLick = {
-                        navController.navigate(NavRoutes.NEWRELEASES)
-                    },
-                    onMovieClick = { movieId ->
-                        navController.navigate(NavRoutes.movieDetails(movieId))
-                    },
-                    onLoginRequired = {
-                        navController.navigate(NavRoutes.AUTH) { launchSingleTop = true }
-                    }
-                )
-            }
-
-
-            composable(NavRoutes.FAVOURITES) {
-                FavouriteScreen(onItemCLick = { movieId ->
-                    navController.navigate(NavRoutes.movieDetails(movieId))
-                }, onLoginRequired = {
-                    navController.navigate(
-                        NavRoutes.AUTH
-                    )
-//                    {
-////                        popUpTo(NavRoutes.FAVOURITES) {
-////                            inclusive = true
-//                        }
-//                    }
-                })
-            }
-
-            composable(NavRoutes.TOPTEN) {
-                TopTenScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onMovieClick = { movieId ->
-                        navController.navigate(NavRoutes.movieDetails(movieId))
-                    }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
-                )
-            }
-
-            composable(NavRoutes.NEWRELEASES) {
-                UpcomingScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onMovieClick = { movieId ->
-                        navController.navigate(NavRoutes.movieDetails(movieId))
-                    }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
-                )
-            }
-
-            composable(
-                route = NavRoutes.MOVIE_DETAILS,
-                arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = NavRoutes.SPLASH,
+                modifier = Modifier.padding(innerPadding)
             ) {
-                DetailsScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onMovieClick = { movieId ->
-                        navController.navigate(NavRoutes.movieDetails(movieId))
-                    },
-                    onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
-                )
-            }
-            composable(route = NavRoutes.EXPLORE) {
-                ExploreScreen(onMovieClick = { movieId ->
-                    navController.navigate(NavRoutes.movieDetails(movieId))
-                }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) })
-            }
-            composable(route = NavRoutes.AUTH) {
-
-                BackHandler {
-                    val callerRoute = navController.previousBackStackEntry?.destination?.route
-
-                    if (callerRoute == NavRoutes.FAVOURITES) {
-                        navController.popBackStack(
-                            NavRoutes.HOME,
-                            inclusive = false
-                        )
-                    } else {
-                        navController.popBackStack()
-                    }
+                composable(NavRoutes.SPLASH) {
+                    SplashScreen(
+                        onNavigateToOnboarding = {
+                            navController.navigate(NavRoutes.ONBOARDING) {
+                                popUpTo(NavRoutes.SPLASH) {
+                                    inclusive = true
+                                }
+                            }
+                        },
+                        onNavigateToHome = {
+                            navController.navigate(NavRoutes.HOME) {
+                                popUpTo(NavRoutes.SPLASH) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
                 }
 
-                AuthScreen(
-                    onBackClick = {
+                composable(NavRoutes.ONBOARDING) {
+                    OnBoardingScreen(onNavigateToHome = {
+                        navController.navigate(NavRoutes.HOME) {
+                            popUpTo(NavRoutes.ONBOARDING) {
+                                inclusive = true
+                            }
+                        }
+                    })
+                }
+
+                composable(NavRoutes.HOME) {
+                    HomeScreen(
+                        onToptenClick = { navController.navigate(NavRoutes.TOPTEN) },
+                        onUpcomingCLick = {
+                            navController.navigate(NavRoutes.NEWRELEASES)
+                        },
+                        onMovieClick = { movieId ->
+                            navController.navigate(NavRoutes.movieDetails(movieId))
+                        },
+                        onLoginRequired = {
+                            navController.navigate(NavRoutes.AUTH) { launchSingleTop = true }
+                        }
+                    )
+                }
+
+
+                composable(NavRoutes.FAVOURITES) {
+                    FavouriteScreen(
+                        onItemCLick = { id, mediaType ->
+                            navController.navigate(NavRoutes.details(id, mediaType))
+                        },
+                        onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
+                    )
+                }
+
+                composable(NavRoutes.TOPTEN) {
+                    TopTenScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onMovieClick = { movieId ->
+                            navController.navigate(NavRoutes.movieDetails(movieId))
+                        }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
+                    )
+                }
+
+                composable(NavRoutes.NEWRELEASES) {
+                    UpcomingScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onMovieClick = { movieId ->
+                            navController.navigate(NavRoutes.movieDetails(movieId))
+                        }, onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
+                    )
+                }
+
+                composable(
+                    route = NavRoutes.DETAILS,
+                    arguments = listOf(
+                        navArgument("type") { type = NavType.StringType },
+                        navArgument("id") { type = NavType.IntType }
+                    )
+                ) { backStackEntry ->
+                    val mediaType = backStackEntry.arguments?.getString("type") ?: "movie"
+                    DetailsScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onMovieClick = { id ->
+                            navController.navigate(
+                                NavRoutes.details(
+                                    id,
+                                    mediaType
+                                )
+                            )
+                        },
+                        onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
+                    )
+                }
+                composable(route = NavRoutes.EXPLORE) {
+                    ExploreScreen(
+                        onMovieClick = { id, mediaType ->
+                            navController.navigate(NavRoutes.details(id, mediaType))
+                        },
+                        onLoginRequired = { navController.navigate(NavRoutes.AUTH) }
+                    )
+                }
+                composable(route = NavRoutes.AUTH) {
+
+                    BackHandler {
                         val callerRoute = navController.previousBackStackEntry?.destination?.route
 
                         if (callerRoute == NavRoutes.FAVOURITES) {
@@ -212,62 +205,78 @@ fun SetupNavGraph(navController: NavHostController) {
                         } else {
                             navController.popBackStack()
                         }
-                    },
-                    onAuthSuccess = {
-                        navController.popBackStack()
                     }
-                )
+
+                    AuthScreen(
+                        onBackClick = {
+                            val callerRoute =
+                                navController.previousBackStackEntry?.destination?.route
+
+                            if (callerRoute == NavRoutes.FAVOURITES) {
+                                navController.popBackStack(
+                                    NavRoutes.HOME,
+                                    inclusive = false
+                                )
+                            } else {
+                                navController.popBackStack()
+                            }
+                        },
+                        onAuthSuccess = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
         }
     }
-}
 
-@Composable
-fun AppBottomNavigationBar(navController: NavHostController) {
-    val items = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Explore,
-        BottomNavItem.Favourite
-    )
+    @Composable
+    fun AppBottomNavigationBar(navController: NavHostController) {
+        val items = listOf(
+            BottomNavItem.Home,
+            BottomNavItem.Explore,
+            BottomNavItem.Favourite
+        )
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar(
-        modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
-        containerColor = Color.Transparent,
-        contentColor = Color.White
-    ) {
-        items.forEach { item ->
-            val isSelected = currentRoute == item.route
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        painter = painterResource(id = item.icon),
-                        contentDescription = item.title
-                    )
-                },
-                label = { Text(text = item.title) },
-                selected = isSelected,
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFFE21221),
-                    selectedTextColor = Color(0xFFE21221),
-                    unselectedIconColor = Color(0xFF9E9E9E),
-                    unselectedTextColor = Color(0xFF9E9E9E),
-                    indicatorColor = Color.Transparent
-                ),
-                onClick = {
-                    if (currentRoute != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(NavRoutes.HOME) {
-                                saveState = true
+        NavigationBar(
+            modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+            containerColor = Color.Transparent,
+            contentColor = Color.White
+        ) {
+            items.forEach { item ->
+                val isSelected = currentRoute == item.route
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = item.icon),
+                            contentDescription = item.title
+                        )
+                    },
+                    label = { Text(text = item.title) },
+                    selected = isSelected,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFFE21221),
+                        selectedTextColor = Color(0xFFE21221),
+                        unselectedIconColor = Color(0xFF9E9E9E),
+                        unselectedTextColor = Color(0xFF9E9E9E),
+                        indicatorColor = Color.Transparent
+                    ),
+                    onClick = {
+                        if (currentRoute != item.route) {
+                            navController.navigate(item.route) {
+                                popUpTo(NavRoutes.HOME) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

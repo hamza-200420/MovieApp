@@ -65,8 +65,12 @@ class MovieRepositoryImpl @Inject constructor(
         ).flow
     }
 
-    override suspend fun getMovieDetails(movieId: Int): MovieDetails {
-        return remoteDataSource.getMovieDetails(movieId).toDomain()
+    override suspend fun getMovieDetails(movieId: Int, mediaType: String): MovieDetails {
+        return if (mediaType == "tv") {
+            remoteDataSource.getTvDetails(movieId).toDomain()
+        } else {
+            remoteDataSource.getMovieDetails(movieId).toDomain()
+        }
     }
 
     override fun searchMoviesPaged(query: String): Flow<PagingData<Movie>> {
@@ -140,15 +144,16 @@ class MovieRepositoryImpl @Inject constructor(
         firestoreDataSource.insertMovie(movie.toFirestoreDto())
     }
 
-    override suspend fun deleteMovie(movieId: Int) {
-        firestoreDataSource.deleteMovieById(movieId)
+    override suspend fun deleteMovie(movieId: Int, mediaType: String) {
+        firestoreDataSource.deleteMovieById(movieId, mediaType)
     }
 
-    override suspend fun isMovieSaved(movieId: Int): Boolean {
-        return firestoreDataSource.isMovieSaved(movieId)
+    override suspend fun isMovieSaved(movieId: Int, mediaType: String): Boolean {
+        return firestoreDataSource.isMovieSaved(movieId, mediaType)
     }
-
     override fun getAllMovies(): Flow<List<MovieDbModel>> {
         return firestoreDataSource.getAllMovies().map { list -> list.map { it.toDomain() } }
     }
+
+
 }

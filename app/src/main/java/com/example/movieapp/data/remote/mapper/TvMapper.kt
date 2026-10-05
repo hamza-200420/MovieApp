@@ -12,7 +12,8 @@ fun TvDto.toDomain(): Movie {
         posterPath = posterPath,
         backdropPath = backdropPath,
         voteAverage = voteAverage,
-        genreIds = genreIds ?: emptyList()
+        genreIds = genreIds ?: emptyList(),
+        mediaType = "tv"
     )
 }
 

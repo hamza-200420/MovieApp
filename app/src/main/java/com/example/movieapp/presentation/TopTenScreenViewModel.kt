@@ -59,7 +59,11 @@ class TopTenScreenViewModel @Inject constructor(
     private fun getFavorites() {
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
-                val ids = movies.map { it.movieId }.toSet()
+                // only movie favourites, so a saved TV show with the same id doesn't light up a movie
+                val ids = movies
+                    .filter { it.mediaType == "movie" }
+                    .map { it.movieId }
+                    .toSet()
                 _uiState.update { it.copy(favoriteIds = ids) }
             }
         }
@@ -74,7 +78,7 @@ class TopTenScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (isFavorite) {
-                    deleteMovieUseCase(movie.id)
+                    deleteMovieUseCase(movie.id, "movie")
                 } else {
                     insertMovieUseCase(
                         MovieDbModel(
@@ -82,7 +86,8 @@ class TopTenScreenViewModel @Inject constructor(
                             movieId = movie.id,
                             title = movie.title,
                             posterPath = movie.posterPath,
-                            voteAverage = movie.voteAverage
+                            voteAverage = movie.voteAverage,
+                            mediaType = "movie"
                         )
                     )
                 }

@@ -8,7 +8,8 @@ fun MovieFirestoreDto.toDomain() = MovieDbModel(
     movieId = movieId,
     title = title,
     posterPath = posterPath,
-    voteAverage = voteAverage
+    voteAverage = voteAverage,
+    mediaType = mediaType
 )
 
 fun MovieDbModel.toFirestoreDto() = MovieFirestoreDto(
@@ -16,5 +17,6 @@ fun MovieDbModel.toFirestoreDto() = MovieFirestoreDto(
     movieId = movieId,
     title = title,
     posterPath = posterPath,
-    voteAverage = voteAverage
+    voteAverage = voteAverage,
+    mediaType = mediaType
 )

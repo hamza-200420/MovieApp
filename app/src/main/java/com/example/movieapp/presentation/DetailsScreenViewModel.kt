@@ -34,27 +34,43 @@ class DetailsScreenViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DetailsScreenUiState())
     val uiState: StateFlow<DetailsScreenUiState> = _uiState.asStateFlow()
 
-    private val movieId: Int = savedStateHandle.get<Int>("movieId")
-        ?: error("movieId missing from nav args")
+    private val itemId: Int = savedStateHandle.get<Int>("id")
+        ?: error("id missing from nav args")
+
+    private val mediaType: String = savedStateHandle.get<String>("type") ?: "movie"
 
     init {
-        loadMovies()
+        loadDetails()
         observeSavedStatus()
     }
 
-    private fun loadMovies() {
-        _uiState.update { it.copy(isLoading = true) }
+    private fun loadDetails() {
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            val res = getMovieDetailsUseCase(movieId)
-            delay(400.milliseconds)
-            _uiState.update { it.copy(isLoading = false, movieDetails = res) }
+            try {
+                val res = getMovieDetailsUseCase(itemId, mediaType)
+                delay(400.milliseconds)
+                _uiState.update { it.copy(isLoading = false, movieDetails = res) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.localizedMessage ?: "Couldn't load details"
+                    )
+                }
+            }
         }
     }
+
     private fun observeSavedStatus() {
         viewModelScope.launch {
             getAllMoviesUseCase().collect { movies ->
                 _uiState.update { state ->
-                    state.copy(isSaved = movies.any { it.movieId == movieId })
+                    state.copy(
+                        isSaved = movies.any { it.movieId == itemId && it.mediaType == mediaType }
+                    )
                 }
             }
         }
@@ -71,15 +87,16 @@ class DetailsScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (currentlySaved) {
-                    deleteMovieUseCase(movieId)
+                    deleteMovieUseCase(itemId, mediaType)
                 } else {
                     insertMovieUseCase(
                         MovieDbModel(
                             id = 0,
-                            movieId = movieId,
+                            movieId = itemId,
                             title = details.title,
                             posterPath = details.posterPath,
-                            voteAverage = details.voteAverage
+                            voteAverage = details.voteAverage,
+                            mediaType = mediaType
                         )
                     )
                 }

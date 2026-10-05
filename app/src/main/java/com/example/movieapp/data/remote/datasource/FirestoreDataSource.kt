@@ -24,18 +24,18 @@ class MovieFirestoreDataSource @Inject constructor(
 
     suspend fun insertMovie(movie: MovieFirestoreDto) {
         favourites()
-            .document(movie.movieId.toString())
+            .document("${movie.mediaType}_${movie.movieId}")
             .set(movie.copy(addedAt = System.currentTimeMillis()))
             .await()
     }
 
-    suspend fun deleteMovieById(movieId: Int) {
-        favourites().document(movieId.toString()).delete().await()
+    suspend fun deleteMovieById(movieId: Int, mediaType: String) {
+        favourites().document("${mediaType}_$movieId").delete().await()
     }
 
-    suspend fun isMovieSaved(movieId: Int): Boolean {
+    suspend fun isMovieSaved(movieId: Int, mediaType: String): Boolean {
         if (auth.currentUser == null) return false
-        return favourites().document(movieId.toString()).get().await().exists()
+        return favourites().document("${mediaType}_$movieId").get().await().exists()
     }
 
     fun getAllMovies(): Flow<List<MovieFirestoreDto>> {
@@ -52,10 +52,7 @@ class MovieFirestoreDataSource @Inject constructor(
                         .orderBy("addedAt", Query.Direction.DESCENDING)
                         .addSnapshotListener { snapshot, _ ->
                             if (snapshot != null) {
-                                trySend(
-                                    snapshot.toObjects(MovieFirestoreDto::class.java)
-                                        .distinctBy { it.movieId }
-                                )
+                                trySend(snapshot.toObjects(MovieFirestoreDto::class.java))
                             }
                         }
                 }
